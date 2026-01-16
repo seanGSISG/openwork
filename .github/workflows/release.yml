@@ -99,8 +99,21 @@ jobs:
           node-version: '20'
           cache: 'pnpm'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (ignore postinstall scripts)
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Run electron-rebuild
+        run: npx electron-rebuild
+        working-directory: apps/desktop
+
+      - name: Install skills dependencies
+        run: |
+          npm --prefix apps/desktop/skills/dev-browser install
+          npm --prefix apps/desktop/skills/file-permission install
+
+      - name: Copy opencode binaries
+        run: node scripts/copy-opencode-binaries.cjs
+        working-directory: apps/desktop
 
       - name: Download Node.js binaries
         run: pnpm -F @accomplish/desktop download:nodejs
