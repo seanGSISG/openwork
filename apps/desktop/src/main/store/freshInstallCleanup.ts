@@ -49,7 +49,10 @@ function getMarkerPath(): string {
 
 /**
  * Get the app bundle's modification time
- * For packaged apps, this is the .app bundle directory
+ * For packaged apps, this handles:
+ *   - macOS: .app bundle directory
+ *   - Linux: .AppImage file or unpacked directory
+ *   - Windows: app directory
  * For dev mode, returns null (skip cleanup logic)
  */
 function getAppBundleMtime(): Date | null {
@@ -57,19 +60,29 @@ function getAppBundleMtime(): Date | null {
     return null;
   }
 
-  // For macOS .app bundles, the executable is at:
-  // /Applications/Accomplish.app/Contents/MacOS/Accomplish
-  // We want the .app bundle directory
   const execPath = app.getPath('exe');
 
-  // Find the .app bundle path
-  const appBundleMatch = execPath.match(/^(.+\.app)/);
-  if (!appBundleMatch) {
+  // Cross-platform bundle path detection
+  let appBundlePath: string | null = null;
+  if (process.platform === 'darwin') {
+    // For macOS .app bundles, the executable is at:
+    // /Applications/Accomplish.app/Contents/MacOS/Accomplish
+    // We want the .app bundle directory
+    const match = execPath.match(/^(.+\.app)/);
+    appBundlePath = match ? match[1] : null;
+  } else if (process.platform === 'linux') {
+    // AppImage or unpacked directory
+    const match = execPath.match(/^(.+\.AppImage)/i);
+    appBundlePath = match ? match[1] : app.getAppPath();
+  } else {
+    // Windows - use app path
+    appBundlePath = app.getAppPath();
+  }
+
+  if (!appBundlePath) {
     console.log('[FreshInstall] Could not determine app bundle path from:', execPath);
     return null;
   }
-
-  const appBundlePath = appBundleMatch[1];
 
   try {
     const stats = fs.statSync(appBundlePath);

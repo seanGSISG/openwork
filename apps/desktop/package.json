@@ -4,17 +4,41 @@
   "private": true,
   "type": "module",
   "description": "Accomplish Desktop App",
+  "homepage": "https://www.accomplish.ai/openwork/",
+  "author": {
+    "name": "Accomplish AI",
+    "email": "support@accomplish.ai"
+  },
   "main": "dist-electron/main/index.js",
   "scripts": {
-    "dev": "electron-vite dev",
+    "postinstall": "electron-rebuild && npm --prefix skills/dev-browser install && npm --prefix skills/file-permission install && node scripts/copy-opencode-binaries.cjs",
+    "dev": "node scripts/patch-electron-name.cjs && rm -rf dist-electron && vite",
+    "dev:clean": "CLEAN_START=1 vite",
     "build": "tsc && vite build && npm --prefix skills/dev-browser install --omit=dev && npm --prefix skills/file-permission install --omit=dev",
-    "postinstall": "electron-builder install-app-deps && node scripts/copy-opencode-binaries.cjs",
-    "package:linux": "pnpm build && node scripts/package.cjs --linux --publish never",
+    "build:electron": "tsc && vite build && node scripts/package.cjs",
+    "build:unpack": "tsc && vite build && node scripts/package.cjs --dir",
+    "package": "pnpm build && node scripts/package.cjs --mac --publish never",
     "package:mac": "pnpm build && node scripts/package.cjs --mac --publish never",
-    "release:linux": "pnpm build && node scripts/package.cjs --linux --publish always",
+    "package:linux": "pnpm build && node scripts/package.cjs --linux --publish never",
+    "release": "pnpm build && node scripts/package.cjs --mac --publish always",
     "release:mac": "pnpm build && node scripts/package.cjs --mac --publish always",
+    "release:linux": "pnpm build && node scripts/package.cjs --linux --publish always",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "clean": "rm -rf dist dist-electron release",
     "download:nodejs": "node scripts/download-nodejs.cjs",
-    "lint": "tsc --noEmit"
+    "test": "vitest run",
+    "test:unit": "vitest run --config vitest.unit.config.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:coverage": "vitest run --coverage",
+    "test:watch": "vitest watch",
+    "test:e2e": "playwright test --config=e2e/playwright.config.ts",
+    "test:e2e:ui": "playwright test --config=e2e/playwright.config.ts --ui",
+    "test:e2e:debug": "playwright test --config=e2e/playwright.config.ts --debug",
+    "test:e2e:fast": "playwright test --config=e2e/playwright.config.ts --project=electron-fast",
+    "test:e2e:integration": "playwright test --config=e2e/playwright.config.ts --project=electron-integration",
+    "test:e2e:report": "playwright show-report e2e/html-report"
   },
   "dependencies": {
     "@accomplish/shared": "workspace:*",
@@ -157,10 +181,14 @@
     "linux": {
       "category": "public.app-category.productivity",
       "icon": "resources/icon.png",
-      "target": ["AppImage"],
+      "target": ["AppImage", "deb"],
       "executableName": "openwork",
       "synopsis": "Openwork - Desktop AI Assistant",
       "description": "Openwork is an AI-powered desktop automation assistant"
+    },
+    "deb": {
+      "maintainer": "Accomplish AI <support@accomplish.ai>",
+      "depends": ["libgtk-3-0", "libnotify4", "libnss3", "libxss1", "libxtst6", "xdg-utils", "libatspi2.0-0", "libuuid1", "libsecret-1-0"]
     }
   }
 }
