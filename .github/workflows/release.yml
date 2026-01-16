@@ -108,8 +108,8 @@ jobs:
 
       - name: Install skills dependencies
         run: |
-          npm --prefix apps/desktop/skills/dev-browser install
-          npm --prefix apps/desktop/skills/file-permission install
+          npm --prefix apps/desktop/skills/dev-browser install --omit=dev
+          npm --prefix apps/desktop/skills/file-permission install --omit=dev
 
       - name: Copy opencode binaries
         run: node scripts/copy-opencode-binaries.cjs
@@ -118,8 +118,11 @@ jobs:
       - name: Download Node.js binaries
         run: pnpm -F @accomplish/desktop download:nodejs
 
-      - name: Build desktop app
-        run: pnpm -F @accomplish/desktop build
+      - name: Build desktop app (TypeScript + Vite only)
+        run: |
+          npx tsc
+          npx vite build
+        working-directory: apps/desktop
 
       - name: Package (unsigned)
         run: node scripts/package.cjs --windows --x64 --publish never
