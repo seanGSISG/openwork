@@ -38,13 +38,15 @@ export function getOpenCodeCliPath(): { command: string; args: string[] } {
   if (app.isPackaged) {
     // In packaged app, OpenCode is in unpacked asar
     // process.resourcesPath points to Resources folder in macOS app bundle
+    // Windows binaries use .exe extension
+    const binName = process.platform === 'win32' ? 'opencode.exe' : 'opencode';
     const cliPath = path.join(
       process.resourcesPath,
       'app.asar.unpacked',
       'node_modules',
       'opencode-ai',
       'bin',
-      'opencode'
+      binName
     );
 
     // Verify the file exists
@@ -118,13 +120,15 @@ export function isOpenCodeBundled(): boolean {
   try {
     if (app.isPackaged) {
       // In packaged mode, check if opencode exists
+      // Windows binaries use .exe extension
+      const binName = process.platform === 'win32' ? 'opencode.exe' : 'opencode';
       const cliPath = path.join(
         process.resourcesPath,
         'app.asar.unpacked',
         'node_modules',
         'opencode-ai',
         'bin',
-        'opencode'
+        binName
       );
       return fs.existsSync(cliPath);
     } else {
